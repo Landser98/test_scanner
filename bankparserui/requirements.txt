@@ -1,0 +1,44 @@
+# Core dependencies
+pandas>=2.2.3
+numpy>=2.2.0,<2.3.0  # Required by opencv-python-headless
+
+# PDF processing
+pdfplumber==0.11.7
+PyMuPDF==1.23.26
+pypdf>=6.4.0  # Fixed vulnerabilities (CVE-2025-62708, CVE-2025-62707, CVE-2025-66019, CVE-2025-55197)
+              # Note: camelot-py 1.0.9 shows dependency warning but works with pypdf 6.7.0
+pdfminer.six>=20250506
+# Note: pypdf2 is deprecated and vulnerable, should be removed if present
+
+# Web framework
+streamlit==1.51.0
+fastapi==0.124.4
+uvicorn==0.38.0
+python-multipart>=0.0.20
+
+# Database
+SQLAlchemy>=2.0.37
+psycopg2-binary==2.9.9
+
+# Authentication
+PyJWT>=2.10.1
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+
+# Data processing
+python-dateutil==2.9.0.post0
+pytz==2025.2
+
+# Utilities
+python-dotenv==1.2.1
+requests==2.32.5
+urllib3>=2.6.3
+PyYAML==6.0.3
+
+# Validation
+pydantic==2.12.5
+email-validator==2.1.0
+
+# Security: Fix vulnerabilities found by safety check
+# nbconvert: CVE-2025-53000 (Windows only, but still a vulnerability)
+nbconvert>7.16.6

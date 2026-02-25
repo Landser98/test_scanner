@@ -1,0 +1,31 @@
+services:
+  bank-parser-api:
+    container_name: bank-parser-api
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - VAULT_ENABLED=${VAULT_ENABLED-}
+      - VAULT_ADDR=${VAULT_ADDR-}
+      - VAULT_TOKEN=${VAULT_TOKEN-}
+      - VAULT_KV_MOUNT=${VAULT_KV_MOUNT-}
+      - VAULT_CONFIG_PATH=${VAULT_CONFIG_PATH-}
+      - VAULT_CONFIG_KEY=${VAULT_CONFIG_KEY-}
+      - VAULT_REQUIRED=${VAULT_REQUIRED-}
+      - VAULT_OVERWRITE=${VAULT_OVERWRITE-}
+      - VAULT_SKIP_VERIFY=${VAULT_SKIP_VERIFY-}
+      - VAULT_TIMEOUT_SECONDS=${VAULT_TIMEOUT_SECONDS-}
+    restart: always
+    command: ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    # Liveness: process alive. Readiness: ready for traffic.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/livez').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

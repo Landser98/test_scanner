@@ -1,0 +1,61 @@
+# Kubernetes Deployment for Streamlit upload UI
+# The container must run continuously as a Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-parser-upload-ui
+  labels:
+    app: bank-parser-upload-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bank-parser-upload-ui
+  template:
+    metadata:
+      labels:
+        app: bank-parser-upload-ui
+    spec:
+      containers:
+        - name: bank-parser-upload-ui
+          image: bank-parser-upload-ui:latest
+          ports:
+            - name: http
+              containerPort: 8502
+          # Streamlit health endpoint
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 2
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bank-parser-upload-ui
+spec:
+  selector:
+    app: bank-parser-upload-ui
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP

@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр базы данных банковских выписок</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: white;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .summary-card-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .date-cell {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .amount-cell {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .positive {
+            color: #28a745;
+        }
+
+        .negative {
+            color: #dc3545;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            margin: 0 4px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .pagination button:hover {
+            background: #764ba2;
+        }
+
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-section input,
+        .filter-section select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .filter-section button {
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-section button:hover {
+            background: #764ba2;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .project-toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 15px;
+            margin-bottom: 16px;
+        }
+
+        .project-toolbar select,
+        .project-toolbar input[type="file"],
+        .project-toolbar button {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+        }
+
+        .project-toolbar button {
+            cursor: pointer;
+            background: #667eea;
+            color: #fff;
+            border: none;
+        }
+
+        .project-toolbar button:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏦 Просмотр базы данных банковских выписок</h1>
+        <p>Просмотр в реальном времени обработанных данных банковских выписок</p>
+    </div>
+
+    <div class="container">
+        <div class="project-toolbar">
+            <label for="projectSelect"><strong>Проект:</strong></label>
+            <select id="projectSelect" onchange="onProjectChanged()">
+                <option value="">Все данные (без проекта)</option>
+            </select>
+            <span id="projectInfo"></span>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" data-tab="summary">Сводка</button>
+            <button class="tab-button" data-tab="statements">Выписки</button>
+            <button class="tab-button" data-tab="transactions">Транзакции</button>
+            <button class="tab-button" data-tab="clients">Клиенты</button>
+            <button class="tab-button" data-tab="projectTables">Таблицы проекта</button>
+        </div>
+
+        <!-- Summary Tab -->
+        <div class="tab-content active" id="summary">
+            <h2>Статистика базы данных</h2>
+            <div class="summary-grid" id="summaryGrid"></div>
+            <h3 style="margin-top: 20px;">Проекты</h3>
+            <div id="projectSummaryContainer"></div>
+        </div>
+
+        <!-- Statements Tab -->
+        <div class="tab-content" id="statements">
+            <h2>Выписки</h2>
+            <div id="statementsContainer"></div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div class="tab-content" id="transactions">
+            <h2>Транзакции</h2>
+            <div class="filter-section">
+                <input type="text" id="statementFilter" placeholder="Фильтр по ID выписки...">
+                <button onclick="loadTransactions()">Фильтр</button>
+                <button onclick="document.getElementById('statementFilter').value = ''; loadTransactions()">Очистить</button>
+            </div>
+            <div id="transactionsContainer"></div>
+        </div>
+
+        <!-- Clients Tab -->
+        <div class="tab-content" id="clients">
+            <h2>Клиенты</h2>
+            <div id="clientsContainer"></div>
+        </div>
+
+        <!-- Project Tables Tab -->
+        <div class="tab-content" id="projectTables">
+            <h2>Таблицы проекта (tx_ip)</h2>
+            <div id="projectTablesContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = (window.location && window.location.origin && window.location.origin.startsWith('http'))
+            ? window.location.origin
+            : 'http://127.0.0.1:8000';
+        let token = localStorage.getItem('token');
+        let currentProjectId = '';
+
+        // XSS protection: escape HTML special characters
+        function escapeHtml(text) {
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+        // XSS-safe: render table using DOM API (no innerHTML with user data)
+        function renderSafeTable(containerId, headers, rows, cellFn, options = {}) {
+            const container = document.getElementById(containerId);
+            container.replaceChildren();
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-wrapper';
+            if (options.maxHeight) {
+                wrapper.style.maxHeight = options.maxHeight;
+            }
+            if (options.minWidth) {
+                wrapper.style.minWidth = options.minWidth;
+            }
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const trHead = document.createElement('tr');
+            headers.forEach(h => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                trHead.appendChild(th);
+            });
+            thead.appendChild(trHead);
+            table.appendChild(thead);
+            const tbody = document.createElement('tbody');
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                cellFn(row).forEach(cell => {
+                    const td = document.createElement('td');
+                    if (cell && typeof cell.appendChild === 'function') {
+                        td.appendChild(cell);
+                    } else {
+                        td.textContent = String(cell ?? '');
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            wrapper.appendChild(table);
+            container.appendChild(wrapper);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadProjects();
+            loadSummary();
+
+            // Tab switching
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const tabName = e.target.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+        });
+
+        async function getToken() {
+            // Get credentials from user input instead of hardcoded values
+            const login = document.getElementById('loginInput')?.value || prompt('Введите логин:');
+            const password = document.getElementById('passwordInput')?.value || prompt('Введите пароль:');
+            
+            if (!login || !password) {
+                showError('Логин и пароль обязательны');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        login: login,
+                        password: password
+                    })
+                });
+                const data = await response.json();
+                token = data.token;
+                localStorage.setItem('token', token);
+                await loadProjects();
+                loadSummary();
+            } catch (error) {
+                showError('Ошибка аутентификации: ' + error.message);
+            }
+        }
+
+        async function apiCall(endpoint) {
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            const response = await fetch(`${API_BASE}${endpoint}`, { headers });
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            return response.json();
+        }
+
+        async function loadSummary() {
+            try {
+                showLoading('summaryGrid');
+                const query = currentProjectId ? `?project_id=${encodeURIComponent(currentProjectId)}` : '';
+                const data = await apiCall(`/api/db/summary${query}`);
+                const container = document.getElementById('summaryGrid');
+                container.replaceChildren();
+                for (const [table, count] of Object.entries(data)) {
+                    const card = document.createElement('div');
+                    card.className = 'summary-card';
+                    const label = document.createElement('div');
+                    label.className = 'summary-card-label';
+                    label.textContent = formatTableName(table);
+                    const value = document.createElement('div');
+                    value.className = 'summary-card-value';
+                    value.textContent = String(count);
+                    card.appendChild(label);
+                    card.appendChild(value);
+                    container.appendChild(card);
+                }
+
+                const overview = await apiCall(`/api/projects-overview${query}`);
+                if (!overview.length) {
+                    const c = document.getElementById('projectSummaryContainer');
+                    c.replaceChildren();
+                    const d = document.createElement('div');
+                    d.className = 'no-data';
+                    d.textContent = 'Проекты не найдены';
+                    c.appendChild(d);
+                } else {
+                    const headers = ['Проект', 'Статус', 'Файлов', 'Успех', 'Пропущено', 'Ошибки', 'Создан'];
+                    renderSafeTable('projectSummaryContainer', headers, overview, row => ([
+                        `${row.project_name || ''} (${row.project_id || ''})`,
+                        row.project_status || '',
+                        String(row.total_files || 0),
+                        String(row.success_files || 0),
+                        String(row.skipped_files || 0),
+                        String(row.error_files || 0),
+                        row.created_at ? new Date(row.created_at).toLocaleString() : '',
+                    ]));
+                }
+            } catch (error) {
+                showError('Ошибка загрузки сводки: ' + error.message);
+            }
+        }
+
+        async function loadStatements() {
+            try {
+                showLoading('statementsContainer');
+                const query = currentProjectId ? `?project_id=${encodeURIComponent(currentProjectId)}` : '';
+                const data = await apiCall(`/api/projects-statements${query}`);
+                
+                if (!data.length) {
+                    const c = document.getElementById('statementsContainer');
+                    c.replaceChildren();
+                    const d = document.createElement('div');
+                    d.className = 'no-data';
+                    d.textContent = 'Выписки не найдены';
+                    c.appendChild(d);
+                    return;
+                }
+
+                const headers = [
+                    'Проект',
+                    'Файл',
+                    'Банк',
+                    'Статус',
+                    'Дата выписки',
+                    'Дата последней операции',
+                    'Дата первой операции',
+                    'Дата конца расчета',
+                    'Дата начала расчета',
+                    'Дата загрузки',
+                    'Сообщение'
+                ];
+                renderSafeTable('statementsContainer', headers, data, row => {
+                    const uploadedAt = row.uploaded_at ? new Date(row.uploaded_at).toLocaleString() : '';
+                    return [
+                        `${row.project_name || ''} (${row.project_id || ''})`,
+                        row.source_filename || row.pdf_name || '',
+                        row.bank || '',
+                        row.processing_status || 'success',
+                        row.statement_date || '',
+                        row.last_operation_date || '',
+                        row.first_operation_date || '',
+                        row.calc_end_date || '',
+                        row.calc_start_date || '',
+                        uploadedAt,
+                        row.processing_message || ''
+                    ];
+                });
+            } catch (error) {
+                showError('Ошибка загрузки выписок: ' + error.message);
+            }
+        }
+
+        async function loadTransactions() {
+            try {
+                showLoading('transactionsContainer');
+                const statementId = document.getElementById('statementFilter').value || null;
+                let url = '/api/db/transactions';
+                if (statementId) {
+                    url = `/api/db/transactions?statement_id=${encodeURIComponent(statementId)}`;
+                } else if (currentProjectId) {
+                    url = `/api/db/transactions?project_id=${encodeURIComponent(currentProjectId)}`;
+                }
+                
+                const data = await apiCall(url);
+                
+                if (!data.length) {
+                    const c = document.getElementById('transactionsContainer');
+                    c.replaceChildren();
+                    const d = document.createElement('div');
+                    d.className = 'no-data';
+                    d.textContent = 'Транзакции не найдены';
+                    c.appendChild(d);
+                    return;
+                }
+
+                const headers = ['Дата', 'Дебет', 'Кредит', 'КНП', 'Назначение', 'Контрагент', 'Документ'];
+                renderSafeTable('transactionsContainer', headers, data, row => {
+                    const debit = row.debit_amount ? (() => {
+                        const s = document.createElement('span');
+                        s.className = 'amount-cell negative';
+                        s.textContent = row.debit_amount.toLocaleString();
+                        return s;
+                    })() : '-';
+                    const credit = row.credit_amount ? (() => {
+                        const s = document.createElement('span');
+                        s.className = 'amount-cell positive';
+                        s.textContent = row.credit_amount.toLocaleString();
+                        return s;
+                    })() : '-';
+                    const purpose = (row.payment_purpose || '').substring(0, 50);
+                    return [
+                        row.operation_date || 'Н/Д',
+                        debit,
+                        credit,
+                        row.payment_code_knp || '-',
+                        purpose ? purpose + '...' : '-',
+                        row.counterparty_name || '-',
+                        row.document_number || '-'
+                    ];
+                });
+            } catch (error) {
+                showError('Ошибка загрузки транзакций: ' + error.message);
+            }
+        }
+
+        async function loadClients() {
+            try {
+                showLoading('clientsContainer');
+                const query = currentProjectId ? `?project_id=${encodeURIComponent(currentProjectId)}` : '';
+                const data = await apiCall(`/api/db/clients${query}`);
+                
+                if (!data.length) {
+                    const c = document.getElementById('clientsContainer');
+                    c.replaceChildren();
+                    const d = document.createElement('div');
+                    d.className = 'no-data';
+                    d.textContent = 'Клиенты не найдены';
+                    c.appendChild(d);
+                    return;
+                }
+
+                const headers = ['ИИН/БИН', 'Полное имя', 'Тип', 'Счета', 'Выписки', 'Дата'];
+                renderSafeTable('clientsContainer', headers, data, row => {
+                    const strong = document.createElement('strong');
+                    strong.textContent = row.iin_bin || '';
+                    const created = new Date(row.created_at).toLocaleDateString();
+                    return [
+                        strong,
+                        row.full_name || '',
+                        row.client_type || '',
+                        String(row.account_count || 0),
+                        String(row.statement_count || 0),
+                        created
+                    ];
+                });
+            } catch (error) {
+                showError('Ошибка загрузки клиентов: ' + error.message);
+            }
+        }
+
+        async function loadProjectTables() {
+            try {
+                if (!currentProjectId) {
+                    const c = document.getElementById('projectTablesContainer');
+                    c.replaceChildren();
+                    const d = document.createElement('div');
+                    d.className = 'no-data';
+                    d.textContent = 'Выберите проект для просмотра tx_ip таблицы';
+                    c.appendChild(d);
+                    return;
+                }
+                showLoading('projectTablesContainer');
+                const data = await apiCall(`/api/projects/${encodeURIComponent(currentProjectId)}/tx_ip`);
+                if (!data.length) {
+                    const c = document.getElementById('projectTablesContainer');
+                    c.replaceChildren();
+                    const d = document.createElement('div');
+                    d.className = 'no-data';
+                    d.textContent = 'tx_ip записи не найдены';
+                    c.appendChild(d);
+                    return;
+                }
+                const headers = [
+                    'Дата', 'Документ', 'Дебет', 'Кредит',
+                    'Контрагент', 'ИИН/БИН контрагента',
+                    'Назначение', 'КНП',
+                    'ip_knp_norm', 'ip_non_biz_knp', 'ip_non_biz_kw',
+                    'ip_non_biz', 'ip_credit_amount', 'ip_is_business_income'
+                ];
+                renderSafeTable(
+                    'projectTablesContainer',
+                    headers,
+                    data,
+                    row => ([
+                        row.txn_date || '',
+                        row.document_number || '',
+                        row.debit_amount || '',
+                        row.credit_amount || '',
+                        row.counterparty_name || '',
+                        row.counterparty_iin_bin || '',
+                        row.payment_purpose || '',
+                        row.knp || '',
+                        row.ip_knp_norm || '',
+                        String(Boolean(row.ip_is_non_business_by_knp)),
+                        String(Boolean(row.ip_is_non_business_by_keywords)),
+                        String(Boolean(row.ip_is_non_business)),
+                        row.ip_credit_amount || '',
+                        String(Boolean(row.ip_is_business_income)),
+                    ]),
+                    { maxHeight: '70vh', minWidth: '1200px' }
+                );
+            } catch (error) {
+                showError('Ошибка загрузки таблиц проекта: ' + error.message);
+            }
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            const btn = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
+            if (btn) btn.classList.add('active');
+
+            // Load data
+            if (tabName === 'summary') {
+                loadSummary();
+            } else if (tabName === 'statements') {
+                loadStatements();
+            } else if (tabName === 'transactions') {
+                loadTransactions();
+            } else if (tabName === 'clients') {
+                loadClients();
+            } else if (tabName === 'projectTables') {
+                loadProjectTables();
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const projects = await apiCall('/api/projects');
+                const select = document.getElementById('projectSelect');
+                const previous = select.value;
+                select.replaceChildren();
+                const allOption = document.createElement('option');
+                allOption.value = '';
+                allOption.textContent = 'Все данные (без проекта)';
+                select.appendChild(allOption);
+
+                projects.forEach(project => {
+                    const opt = document.createElement('option');
+                    opt.value = project.project_id;
+                    opt.textContent = `${project.name} (${project.statements_count}/9)`;
+                    select.appendChild(opt);
+                });
+
+                if ([...select.options].some(o => o.value === previous)) {
+                    select.value = previous;
+                    currentProjectId = previous;
+                } else {
+                    select.value = '';
+                    currentProjectId = '';
+                }
+                renderProjectInfo();
+            } catch (error) {
+                showError('Ошибка загрузки проектов: ' + error.message);
+            }
+        }
+
+        function onProjectChanged() {
+            const select = document.getElementById('projectSelect');
+            currentProjectId = select.value || '';
+            renderProjectInfo();
+            const activeTab = document.querySelector('.tab-content.active')?.id || 'summary';
+            if (activeTab === 'summary') loadSummary();
+            if (activeTab === 'statements') loadStatements();
+            if (activeTab === 'transactions') loadTransactions();
+            if (activeTab === 'clients') loadClients();
+            if (activeTab === 'projectTables') loadProjectTables();
+        }
+
+        function renderProjectInfo() {
+            const el = document.getElementById('projectInfo');
+            el.textContent = currentProjectId ? `Выбран проект: ${currentProjectId}` : 'Режим: все данные';
+        }
+
+        // Project creation/upload is handled in Streamlit UI on :8502.
+
+        function formatTableName(name) {
+            const tableNames = {
+                'projects': 'Проекты',
+                'project_statements': 'Выписки проектов',
+                'clients': 'Клиенты',
+                'accounts': 'Счета',
+                'statements': 'Выписки',
+                'transactions': 'Транзакции',
+                'transactions_ip_flags': 'Флаги IP транзакций',
+                'income_summaries': 'Сводки дохода',
+                'ip_income_monthly': 'Месячный доход ИП',
+                'statement_headers': 'Заголовки выписок',
+                'statement_footers': 'Подвалы выписок',
+                'statement_metadata': 'Метаданные выписок'
+            };
+            return tableNames[name] || name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function showLoading(elementId) {
+            const c = document.getElementById(elementId);
+            c.replaceChildren();
+            const d = document.createElement('div');
+            d.className = 'loading';
+            d.textContent = 'Загрузка...';
+            c.appendChild(d);
+        }
+
+        function showError(message) {
+            const errorHtml = `<div class="error">${message}</div>`;
+            document.querySelector('.container').insertAdjacentHTML('afterbegin', errorHtml);
+            setTimeout(() => {
+                document.querySelector('.error')?.remove();
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successHtml = `<div class="success">${message}</div>`;
+            document.querySelector('.container').insertAdjacentHTML('afterbegin', successHtml);
+            setTimeout(() => {
+                document.querySelector('.success')?.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

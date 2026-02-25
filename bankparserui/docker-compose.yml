@@ -1,0 +1,34 @@
+services:
+  bank-parser-upload-ui:
+    container_name: bank-parser-upload-ui
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8502:8502"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - VAULT_ENABLED=${VAULT_ENABLED-}
+      - VAULT_ADDR=${VAULT_ADDR-}
+      - VAULT_TOKEN=${VAULT_TOKEN-}
+      - VAULT_KV_MOUNT=${VAULT_KV_MOUNT-}
+      - VAULT_CONFIG_PATH=${VAULT_CONFIG_PATH-}
+      - VAULT_CONFIG_KEY=${VAULT_CONFIG_KEY-}
+      - VAULT_REQUIRED=${VAULT_REQUIRED-}
+      - VAULT_OVERWRITE=${VAULT_OVERWRITE-}
+      - VAULT_SKIP_VERIFY=${VAULT_SKIP_VERIFY-}
+      - VAULT_TIMEOUT_SECONDS=${VAULT_TIMEOUT_SECONDS-}
+    restart: always
+    command:
+      [
+        "python",
+        "-m",
+        "streamlit",
+        "run",
+        "src/ui/upload_app.py",
+        "--server.port=8502",
+        "--server.address=0.0.0.0",
+        "--server.headless=true",
+      ]
