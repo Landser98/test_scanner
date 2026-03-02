@@ -111,4 +111,26 @@ Secret data/Value	Полный appsettings с проекта
 Для подключения Vault к проекту смотрите здесь ConfigProvider
 
 
+{
+ALLOWED_ORIGINS:http://bank-parser-upload-ui:8502,http://bankparserui:8502,https://otbasybank.kz
+DB_HOST:10.10.50.154
+DB_NAME:postgres
+DB_PASSWORD:secure
+DB_PORT:31243
+DB_SSLMODE:require
+DB_USER:bank_user
+SECRET_KEY:DzM4LjvSeaMSRGaQscMpqjVbilpNUzyOer-kGm7po34Ph2E5azQ6E8mPt5q3aXsN0gyYm-Ob6_Y8U7hMoTfBOA
+VAULT_ADDR:https://vault-test.otbasybank.kz
+VAULT_CONFIG_KEY:configJson
+VAULT_CONFIG_PATH:bank-parser/api
+VAULT_ENABLED:true
+VAULT_KV_MOUNT:secret
+VAULT_OVERWRITE:false
+VAULT_REQUIRED:false
+VAULT_SKIP_VERIFY:false
+VAULT_TIMEOUT_SECONDS:10
+VAULT_TOKEN:
+}
+
+
 
