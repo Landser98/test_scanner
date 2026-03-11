@@ -80,12 +80,12 @@ RuntimeError: SECRET_KEY is required and must be set via environment variable
 Не удалось инициализировать схему проектов: connection to server at "127.0.0.1", port 5432 failed: Connection refused Is the server running on that host and accepting TCP/IP connections?
 
 {
-ALLOWED_ORIGINS:http://bank-parser-upload-ui:8502,http://bankparserui:8502,https://otbasybank.kz
-DB_HOST:10.10.50.154
-DB_NAME:postgres
-DB_PASSWORD:secure
-DB_PORT:31243
-DB_SSLMODE:require
-DB_USER:bank_user
-SECRET_KEY:DzM4LjvSeaMSRGaQscMpqjVbilpNUzyOer-kGm7po34Ph2E5azQ6E8mPt5q3aXsN0gyYm-Ob6_Y8U7hMoTfBOA
+  "ALLOWED_ORIGINS": "http://bank-parser-upload-ui:8502,http://bankparserui:8502,https://otbasybank.kz",
+  "DB_HOST": "10.10.50.154",
+  "DB_NAME": "postgres",
+  "DB_PASSWORD": "secure",
+  "DB_PORT": "31243",
+  "DB_SSLMODE": "require",
+  "DB_USER": "bank_user",
+  "SECRET_KEY": "DzM4LjvSeaMSRGaQscMpqjVbilpNUzyOer-kGm7po34Ph2E5azQ6E8mPt5q3aXsN0gyYm-Ob6_Y8U7hMoTfBOA"
 }
