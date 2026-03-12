@@ -1,0 +1,5 @@
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+  You can now view your Streamlit app in your browser.
+  URL: http://0.0.0.0:8080
+[vault] Loading config from Vault (enabled=False, required=False, overwrite=False, addr='https://vault-test.otbasybank.kz/', mount='incomevalidation-bankparserui', path='bankparserui', key='appsettings.json')
+[vault] Vault config load failed: HTTPError: 502 Server Error: Bad Gateway for url: https://vault-test.otbasybank.kz/v1/incomevalidation-bankparserui/bankparserui/appsettings.json
